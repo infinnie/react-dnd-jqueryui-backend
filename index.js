@@ -1,17 +1,16 @@
 /// <reference path="../../lib/jquery-ui.js"/>
 "use strict";
 
-var $ = (window && window.jQuery) || require("jquery"),
-    jQuery = $,
-    invariant = require("invariant");
+var invariant = require("invariant");
 
-require("../../lib/jquery-ui.js");
+//require("../../lib/jquery-ui.js");
 
 var jQueryUIBackEnd = function (manager) {
     this.actions = manager.getActions();
     this.monitor = manager.getMonitor();
     this.registry = manager.getRegistry();
 
+    this.isDragging = false;
     this.sourceNodes = {};
     this.sourceNodeOptions = {};
     this.sourcePreviewNodes = {};
@@ -23,8 +22,11 @@ var jQueryUIBackEnd = function (manager) {
     this.getSourceClientOffset = this.getSourceClientOffset.bind(this);
     this.handleDrop = (function (that) {
         return function () {
-            that.actions.drop();
-            that.actions.endDrag();
+            if (that.isDragging) {
+                that.actions.drop();
+                that.actions.endDrag();
+                that.isDragging = false;
+            }
         };
     })(this);
 };
@@ -32,6 +34,7 @@ var jQueryUIBackEnd = function (manager) {
 jQueryUIBackEnd.prototype = {
     setup: function () {
         var that = this;
+        this.isDragging = false;
         if (typeof window === "undefined") {
             return;
         }
@@ -69,6 +72,7 @@ jQueryUIBackEnd.prototype = {
                 });
             }, drag: function (ev, ui) {
                 that.actions.publishDragSource();
+                that.isDragging = true;
             }, stop: function () {
                 $(this).css("cssText", "");
             }
